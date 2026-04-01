@@ -1,0 +1,24 @@
+{
+  "identifier": "desktop",
+  "description": "Windows desktop capability for Copylot",
+  "platforms": [
+    "windows"
+  ],
+  "windows": [
+    "main",
+    "translator"
+  ],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "core:event:allow-listen",
+    "core:event:allow-emit",
+    "store:default",
+    "clipboard-manager:allow-write-text",
+
+    "global-shortcut:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-is-registered"
+  ]
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Translator</title>
+    <link rel="stylesheet" href="/src/translator.css" />
+    <script type="module" src="/src/translator.ts" defer></script>
+  </head>
+  <body>
+    <main class="panel">
+      <header class="header">
+        <div class="header-left" data-tauri-drag-region>
+          <div class="title" data-tauri-drag-region>Copylot</div>
+          <div class="subtitle" id="subtitle" data-tauri-drag-region>翻译</div>
+        </div>
+        <div class="header-right">
+          <button id="btn-copy" class="icon-btn" type="button" title="复制">Copy</button>
+        </div>
+      </header>
+
+      <section class="view view-active">
+        <pre id="selected-text" class="content">（等待翻译…）</pre>
+      </section>
+
+
+    </main>
+  </body>
+</html>
