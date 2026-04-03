@@ -3,7 +3,7 @@
 use log;
 mod app;
 mod setup;
-use app::{config, selection, window_manager};
+use app::{config, history, selection, window_manager};
 mod llm;
 use llm::translation;
 use tauri::Emitter;
@@ -26,6 +26,7 @@ pub fn run() {
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app_handle, shotcut, event| {
+                    use crate::app::StoreExt;
                     use tauri_plugin_global_shortcut::{Shortcut, ShortcutState};
                     // 这里直接从 AppConfig 读取字符串并解析为 Shortcut，实现即时生效。
                     let cfg = config::AppConfig::read_with_app(&app_handle);
@@ -59,14 +60,26 @@ pub fn run() {
                                 }
 
                                 if !text.is_empty() {
+                                    use crate::app::history::TranslationHistory;
+
+                                    let translation = translation::invoke(&app_handle, &text).await;
                                     if let Err(e) = w.emit(
                                         "selected-text",
                                         SelectedTextPayload {
                                             // 调用翻译接口
-                                            text: translation::invoke(&app_handle, &text).await,
+                                            text: translation.clone(),
                                         },
                                     ) {
                                         log::error!("emit selected-text failed: {e:?}");
+                                    } else {
+                                        // 添加翻译记录到历史
+                                        log::trace!(
+                                            "History: {:#?}",
+                                            TranslationHistory::add_record(
+                                                &app_handle,
+                                                translation
+                                            )
+                                        )
                                     }
                                 } else {
                                     log::info!("未选择文本，显示上一次的翻译结果");
@@ -96,6 +109,9 @@ pub fn run() {
             config::cmd::get_app_conf,
             config::cmd::update_app_conf,
             config::cmd::reset_app_conf,
+            history::cmd::get_history,
+            history::cmd::clear_history,
+            history::cmd::delete_history_record,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

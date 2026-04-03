@@ -1,3 +1,4 @@
+use crate::app::StoreExt;
 use crate::app::config::AppConfig;
 
 const TEMPLATE: &str = r#"
@@ -62,7 +63,7 @@ pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
     {
         Ok(chat_completion) => {
             let ret_message = chat_completion.choices.first().unwrap().message.clone();
-            log::debug!("translation response message: {:?}", ret_message);
+            log::trace!("translation response message: {:?}", ret_message);
             return ret_message.content.unwrap().trim().to_string();
         }
         Err(e) => {

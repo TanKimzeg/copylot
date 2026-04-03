@@ -1,6 +1,4 @@
-/// @see: https://github.com/drl990114/MarkFlowy/blob/f63e66dfab81444bc134504e4e922bc6bf4856a9/apps/desktop/src-tauri/src/app/conf.rs
-use tauri::{AppHandle, Manager};
-use tauri_plugin_store::{Store, StoreBuilder};
+use crate::app::StoreExt;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct AppConfig {
@@ -11,57 +9,15 @@ pub struct AppConfig {
     pub hotkey: Option<String>,
 }
 
-fn create_store(app: &AppHandle) -> Result<std::sync::Arc<Store<tauri::Wry>>, String> {
-    let store_path = "copylot_store.bin";
+const CONFIG_STORE_KEY: &str = "copylot_config";
 
-    StoreBuilder::new(app.app_handle(), store_path)
-        .build()
-        .map_err(|e| format!("Failed to build store: {:?}", e))
+impl StoreExt for AppConfig {
+    fn store_key() -> &'static str {
+        CONFIG_STORE_KEY
+    }
 }
 
-pub const STORE_KEY: &str = "copylot_config";
-
 impl AppConfig {
-    pub fn new() -> Self {
-        Self {
-            translation_api_key: None,
-            translation_model: Some("deepseek-chat".to_string()),
-            translation_base_url: Some("https://api.deepseek.com/v1".to_string()),
-
-            hotkey: Some("Ctrl+Alt+Q".to_string()),
-        }
-    }
-
-    pub fn load_from_store(app: &AppHandle) -> Result<Self, String> {
-        let store = create_store(app)?;
-        match store.get(STORE_KEY) {
-            Some(config_json) => serde_json::from_value::<AppConfig>(config_json)
-                .map_err(|e| format!("Failed to parse config JSON: {:?}", e)),
-            None => {
-                let default_config = Self::new();
-                let _ = store.set(
-                    STORE_KEY,
-                    serde_json::to_value(&default_config)
-                        .map_err(|e| format!("Failed to serialize default config: {:?}", e))?,
-                );
-                Ok(default_config)
-            }
-        }
-    }
-
-    pub fn write_to_store(self, app: &AppHandle) -> Result<Self, String> {
-        let store = create_store(app)?;
-
-        let value = serde_json::to_value(&self)
-            .map_err(|e| format!("Failed to serialize config: {}", e))?;
-
-        store.set(STORE_KEY.to_string(), value);
-        store
-            .save()
-            .map_err(|e| format!("Failed to save store: {:?}", e))?;
-        Ok(self)
-    }
-
     fn normalize_opt_str(v: Option<&str>) -> Option<String> {
         v.map(|s| s.trim().trim_matches('"').to_string())
     }
@@ -99,55 +55,22 @@ impl AppConfig {
 
         config
     }
-
-    pub fn read_with_app(app: &AppHandle) -> Self {
-        match Self::load_from_store(app) {
-            Ok(config) => config,
-            Err(e) => {
-                log::error!("Failed to load config from store: {e}");
-                Self::default()
-            }
-        }
-    }
-
-    pub fn write_with_app(self, app: &AppHandle) -> Self {
-        match self.clone().write_to_store(app) {
-            Ok(config) => config,
-            Err(e) => {
-                log::error!("Failed to write config to store: {e}");
-                Self::default()
-            }
-        }
-    }
-
-    pub fn reset_with_app(self, app: &AppHandle) -> Self {
-        let store = match create_store(app) {
-            Ok(s) => s,
-            Err(_) => return Self::default(),
-        };
-
-        store.delete(STORE_KEY);
-        if store.save().is_ok() {
-            return self
-                .clone()
-                .write_to_store(app)
-                .unwrap_or_else(|_| Self::default());
-        }
-
-        Self::default()
-    }
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
-        Self::new()
+        Self {
+            translation_api_key: None,
+            translation_model: Some("deepseek-chat".to_string()),
+            translation_base_url: Some("https://api.deepseek.com/v1".to_string()),
+
+            hotkey: Some("Ctrl+Alt+Q".to_string()),
+        }
     }
 }
 
 pub mod cmd {
-    use log;
-
-    use super::AppConfig;
+    use super::{AppConfig, StoreExt};
     use tauri::{command, AppHandle};
 
     #[cfg(desktop)]
@@ -181,18 +104,11 @@ pub mod cmd {
             log::error!("register new hotkey failed: {e:?}");
             return;
         }
-
     }
 
     #[command]
     pub fn get_app_conf(app: AppHandle) -> AppConfig {
-        match AppConfig::load_from_store(&app) {
-            Ok(config) => config,
-            Err(e) => {
-                log::error!("Failed to load config from store: {e}");
-                AppConfig::default()
-            }
-        }
+        AppConfig::read_with_app(&app)
     }
 
     #[command]

@@ -19,6 +19,7 @@ pub fn init(app: &mut App) -> Result<(), Box<dyn std::error::Error>> {
         {
             use crate::app::config::cmd as config_cmd;
             use crate::app::config::AppConfig;
+            use crate::app::StoreExt;
             // 从 AppConfig（copylot_store.bin）读取配置
             let cfg = AppConfig::read_with_app(&app_handle);
             log::info!(
