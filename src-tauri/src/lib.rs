@@ -7,13 +7,14 @@ use app::{config, selection, window_manager};
 mod llm;
 use llm::translation;
 use tauri::Emitter;
-use tauri::Manager;
 
 #[derive(serde::Serialize, Clone)]
 struct SelectedTextPayload {
     text: String,
 }
 
+pub const MAIN_WINDOW_LABEL: &str = "main";
+pub const TRANSLATOR_WINDOW_LABEL: &str = "translator";
 // 仅支持 Windows 桌面端
 #[cfg(all(windows, not(mobile)))]
 pub fn run() {
@@ -82,18 +83,13 @@ pub fn run() {
         .setup(|app| setup::init(app))
         .on_window_event(|window, event| {
             // 注册了全局热键插件后，点主窗口的关闭按钮，进程可能仍然留在后台继续监听热键。
-            const MAIN_WINDOW_LABEL: &str = "main";
             if window.label() != MAIN_WINDOW_LABEL {
                 return;
             }
 
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
-                let app = window.app_handle().clone();
                 let _ = window.hide();
-                tauri::async_runtime::spawn(async move {
-                    app.exit(0);
-                });
             }
         })
         .invoke_handler(tauri::generate_handler![

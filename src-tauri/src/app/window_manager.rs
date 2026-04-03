@@ -1,8 +1,7 @@
 use log;
 use tauri::Manager;
 
-const TRANSLATOR_WINDOW_LABEL: &str = "translator";
-
+use crate::TRANSLATOR_WINDOW_LABEL;
 pub fn ensure_translator_window(
     app_handle: &tauri::AppHandle,
 ) -> Result<tauri::WebviewWindow, tauri::Error> {
