@@ -1,6 +1,6 @@
 [package]
 name = "copylot"
-version = "0.2.0"
+version = "0.2.1"
 description = "Copylot - Desktop AI translation tool."
 authors = ["TanKimzeg"]
 edition = "2021"

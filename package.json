@@ -1,7 +1,7 @@
 {
   "name": "copylot",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Desktop AI translation tool.",
   "license": "AGPL-3.0-only",
