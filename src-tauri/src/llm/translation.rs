@@ -1,5 +1,6 @@
 use crate::app::StoreExt;
 use crate::app::config::AppConfig;
+use tauri::Emitter;
 
 const TEMPLATE: &str = r#"
 你是一个翻译助手，专门帮助用户将文本从一种语言翻译成简体中文。
@@ -7,6 +8,11 @@ const TEMPLATE: &str = r#"
 注意：请只提供翻译结果，不要包含任何解释、评论或原文。
 对原文可能出现的专业术语、俚语或文化特定的表达进行适当的翻译，以确保译文在中文环境中易于理解。
 "#;
+
+#[derive(serde::Serialize, Clone)]
+struct TranslationChunkPayload {
+    text: String,
+}
 
 pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
     use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole};
@@ -58,16 +64,28 @@ pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
 
     match ChatCompletion::builder(&model, messages)
         .credentials(credentials)
-        .create()
+        .create_stream()
         .await
     {
-        Ok(chat_completion) => {
-            let ret_message = chat_completion.choices.first().unwrap().message.clone();
-            log::trace!("translation response message: {:?}", ret_message);
-            return ret_message.content.unwrap().trim().to_string();
+        Ok(mut rx) => {
+            let mut full_text = String::new();
+            while let Some(delta) = rx.recv().await {
+                if let Some(content) = &delta.choices.first().and_then(|c| c.delta.content.as_ref())
+                {
+                    full_text.push_str(content);
+                    let _ = app.emit_to(
+                        crate::TRANSLATOR_WINDOW_LABEL,
+                        "translation-chunk",
+                        TranslationChunkPayload {
+                            text: full_text.clone(),
+                        },
+                    );
+                }
+            }
+            full_text.trim().to_string()
         }
         Err(e) => {
-            log::error!("translation invoke failed: {e:?}");
+            log::error!("translation stream failed: {e:?}");
             "（翻译失败）".to_string()
         }
     }

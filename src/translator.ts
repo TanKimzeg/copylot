@@ -25,6 +25,10 @@ async function init() {
     console.log("selected-text received", event.payload?.text?.slice(0, 60));
     elSelectedText.textContent = event.payload?.text ?? "";
   });
+
+  await listen<{ text: string }>("translation-chunk", (event) => {
+    elSelectedText.textContent = event.payload?.text ?? "";
+  });
 }
 
 void init();
