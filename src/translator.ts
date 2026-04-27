@@ -27,7 +27,7 @@ async function init() {
   });
 
   await listen<{ text: string }>("translation-chunk", (event) => {
-    elSelectedText.textContent = event.payload?.text ?? "";
+    elSelectedText.textContent += event.payload?.text ?? "";
   });
 }
 
