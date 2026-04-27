@@ -61,7 +61,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             translation_api_key: None,
-            translation_model: Some("deepseek-chat".to_string()),
+            translation_model: Some("deepseek-v4-flash".to_string()),
             translation_base_url: Some("https://api.deepseek.com/v1".to_string()),
 
             hotkey: Some("Ctrl+Alt+Q".to_string()),
