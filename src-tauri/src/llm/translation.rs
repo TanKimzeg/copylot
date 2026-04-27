@@ -17,7 +17,7 @@ pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
     let model = cfg
         .translation_model
         .as_deref()
-        .unwrap_or("deepseek-chat")
+        .unwrap_or("deepseek-v4-flash")
         .to_string();
 
     let api_key = cfg.translation_api_key.unwrap_or_default();
@@ -26,7 +26,7 @@ pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
     let base_url = cfg
         .translation_base_url
         .unwrap_or_else(|| match model.as_str() {
-            "deepseek-chat" => "https://api.deepseek.com/v1".to_string(),
+            "deepseek-v4-flash" => "https://api.deepseek.com/v1".to_string(),
             _ => "https://api.openai.com/v1".to_string(),
         });
 
