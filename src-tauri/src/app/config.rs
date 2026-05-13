@@ -112,7 +112,7 @@ pub mod cmd {
     }
 
     #[command]
-    pub fn update_app_conf(app: AppHandle, patch: serde_json::Value) {
+    pub fn update_app_conf(app: AppHandle, patch: serde_json::Value) -> AppConfig {
         let prev = AppConfig::read_with_app(&app);
         let next = prev.clone().patch(patch);
 
@@ -120,7 +120,7 @@ pub mod cmd {
         if prev.hotkey.as_deref() != next.hotkey.as_deref() {
             apply_hotkey(&app, next.hotkey.as_deref());
         }
-        next.write_with_app(&app);
+        next.write_with_app(&app)
     }
 
     #[command]
