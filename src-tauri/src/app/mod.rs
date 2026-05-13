@@ -70,7 +70,7 @@ where
             Ok(data) => data,
             Err(e) => {
                 log::error!("Failed to write {} to store: {e}", Self::store_key());
-                Self::default()
+                self
             }
         }
     }
