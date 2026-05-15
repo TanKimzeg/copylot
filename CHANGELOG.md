@@ -4,6 +4,24 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [SemVer](https://semver.org/lang/zh-CN/)。
 
+## [0.3.0] - 2026-05-15
+
+### Added
+
+- 切换 `openai` 依赖至自维护 fork（`TanKimzeg/openai`），支持 `extra_body` 透传字段。
+- 对 DeepSeek 模型自动注入 `thinking: { type: "disabled" }`，显式关闭深度思考以提升响应速度。
+
+### Changed
+
+- 重构翻译模块，抽取 `get_chat_completion_builder` 函数集中管理请求构建逻辑。
+- `update_app_conf` 命令现在返回更新后的 `AppConfig`。
+
+### Fixed
+
+- 修复流式翻译前端逐块渲染时覆盖前文的问题（`textContent +=`）。
+- 修复配置写入存储失败时错误回退为默认值的问题，现在保留原值。
+- 翻译窗口关闭后不再继续推送流式数据，避免后台报错。
+
 ## [0.2.1] - 2026-04-27
 
 ### Changed
