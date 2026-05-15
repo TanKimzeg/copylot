@@ -1,6 +1,8 @@
 use std::sync::LazyLock;
 
-use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole};
+use openai::chat::{
+    ChatCompletion, ChatCompletionBuilder, ChatCompletionMessage, ChatCompletionMessageRole,
+};
 use openai::Credentials;
 
 use crate::app::config::AppConfig;
@@ -25,30 +27,11 @@ struct TranslationChunkPayload {
 
 pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
     let cfg = AppConfig::read_with_app(app);
-
-    let model = cfg
-        .translation_model
-        .as_deref()
-        .unwrap_or(DEFAULT_MODEL)
-        .to_string();
-
     let api_key = cfg.translation_api_key.unwrap_or_default();
-
-    // 优先使用配置的 base_url；否则根据 model 推断默认值
-    let base_url = cfg
-        .translation_base_url
-        .filter(|u| !u.is_empty())
-        .unwrap_or_else(|| match model.as_str() {
-            "deepseek-v4-flash" => "https://api.deepseek.com/v1".to_string(),
-            _ => "https://api.openai.com/v1".to_string(),
-        });
-
     if api_key.is_empty() {
         log::error!("translation_api_key is empty");
         return "（未配置 API Key）".to_string();
     }
-
-    let credentials = Credentials::new(api_key, base_url);
 
     let messages = vec![
         ChatCompletionMessage {
@@ -69,10 +52,14 @@ pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
         },
     ];
 
-    match ChatCompletion::builder(&model, messages)
-        .credentials(credentials)
-        .create_stream()
-        .await
+    match get_chat_completion_builder(
+        cfg.translation_model.as_deref(),
+        cfg.translation_base_url.as_deref(),
+        &api_key,
+    )
+    .messages(messages)
+    .create_stream()
+    .await
     {
         Ok(mut rx) => {
             let mut full_text = String::new();
@@ -99,5 +86,35 @@ pub async fn invoke(app: &tauri::AppHandle, input: &str) -> String {
             log::error!("translation stream failed: {e:?}");
             "（翻译失败）".to_string()
         }
+    }
+}
+
+fn get_chat_completion_builder(
+    model: Option<&str>,
+    base_url: Option<&str>,
+    api_key: &str,
+) -> ChatCompletionBuilder {
+    let model = model.unwrap_or(DEFAULT_MODEL).to_string();
+    let base_url = base_url
+        .filter(|u| !u.is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or_else(|| match model.as_str() {
+            "deepseek-v4-flash" => "https://api.deepseek.com".to_string(),
+            _ => "https://api.openai.com/v1".to_string(),
+        });
+
+    let credentials = Credentials::new(api_key, base_url);
+    let builder = ChatCompletionBuilder::default()
+        .model(&model)
+        .credentials(credentials);
+    if model.to_lowercase().contains("deepseek") {
+        let mut extra_body = std::collections::HashMap::new();
+        extra_body.insert(
+            "thinking".to_string(),
+            serde_json::json!({"type": "disabled"}),
+        );
+        builder.extra_body(extra_body)
+    } else {
+        builder
     }
 }

@@ -2673,8 +2673,7 @@ dependencies = [
 [[package]]
 name = "openai"
 version = "1.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cefecf807bb3032265c7d487e238229b70b40f197354478201694149ddd06de"
+source = "git+https://github.com/TanKimzeg/openai.git#1f32a661bb5667a20c5b3286459d010abc72ac3a"
 dependencies = [
  "anyhow",
  "bytes",

@@ -37,7 +37,7 @@ tauri-plugin-clipboard-manager = "2"
 arboard = "3.6.1"
 enigo = "0.6.1"
 log = { version = "0.4.29", features = ["std"] }
-openai = "1.1.1"
+openai = { git = "https://github.com/TanKimzeg/openai.git" }
 tauri-plugin-store = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
