@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "Copylot - Desktop AI translation tool."
 authors = ["TanKimzeg"]
 edition = "2021"
-license = "AGPL-3.0-only"
+license = "GPL-3.0"
 repository = "https://github.com/TanKimzeg/copylot"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
